@@ -14,7 +14,8 @@ export const register = async (req, res) => {
       email: email,
       passwordHash: Hash,
       name: name,
-      status: "notActive",
+      status: "active",
+      key: Date.now(),
     });
     // создание самого пользователя в монгоДБ
     const user = await newUser.save();
@@ -23,8 +24,10 @@ export const register = async (req, res) => {
       expiresIn: "3d",
     });
     // избавление от параметра passwordHash в информации от юзера. она не нужна. _doc =
+    const allUsers = await UserModel.find().exec();
     const { passwordHash, ...userData } = user._doc;
-    res.json({ ...userData, token });
+    console.log(allUsers);
+    res.json({ ...userData, token, allUsers });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -96,7 +99,7 @@ export const me = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      message: " fault during registration(register)",
+      message: " fault during fetch current user(me)",
     });
   }
 };
@@ -110,11 +113,15 @@ export const block = async (req, res) => {
   });
 
   try {
-    await UserModel.updateMany({ _id: { $in: userIDs } }, { $set: { status } });
-
-    res
-      .status(200)
-      .json({ message: "Статус выбранных пользователей успешно обновлен" });
+    const updatedUsers = await UserModel.updateMany(
+      { _id: { $in: userIDs } },
+      { $set: { status } }
+    );
+    const allUsers = await UserModel.find().exec();
+    res.status(200).json({
+      allUsers,
+      message: "Статус выбранных пользователей успешно обновлен",
+    });
   } catch (error) {
     res
       .status(500)
@@ -130,29 +137,37 @@ export const unblock = async (req, res) => {
   });
 
   try {
-    await UserModel.updateMany({ _id: { $in: userIDs } }, { $set: { status } });
+    const updatedUsers = await UserModel.updateMany(
+      { _id: { $in: userIDs } },
+      { $set: { status } }
+    );
+    const allUsers = await UserModel.find().exec();
 
-    res
-      .status(200)
-      .json({ message: "Статус выбранных пользователей успешно обновлен" });
+    res.status(200).json({
+      allUsers,
+      message: "Статус выбранных пользователей успешно обновлен",
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Ошибка при обновлении статуса пользователей" });
+    res.status(500).json(updatedUsers, {
+      error: "Ошибка при обновлении статуса пользователей",
+    });
   }
 };
 export const remove = async (req, res) => {
   const users = req.body;
+  console.log(users);
   const userIDs = users.map((item) => {
     return item._id;
   });
 
   try {
     const result = await UserModel.deleteMany({ _id: { $in: userIDs } });
-
+    const allUsers = await UserModel.find().exec();
     // Проверяем, сколько документов было удалено
     if (result.deletedCount > 0) {
-      res.status(200).json({ message: "Пользователи успешно удалены" });
+      res
+        .status(200)
+        .json({ result, allUsers, message: "Пользователи успешно удалены" });
     } else {
       res.status(404).json({ message: "Пользователи не найдены" });
     }

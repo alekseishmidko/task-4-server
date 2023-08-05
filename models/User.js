@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema(
       enum: ["active", "notActive"],
       default: "active",
     },
+    key: { type: Number, unique: true },
   },
   { timestamps: true }
 );
