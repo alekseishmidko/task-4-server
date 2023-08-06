@@ -26,8 +26,8 @@ export const register = async (req, res) => {
     // избавление от параметра passwordHash в информации от юзера. она не нужна. _doc =
     const allUsers = await UserModel.find().exec();
     const { passwordHash, ...userData } = user._doc;
-    console.log(allUsers);
-    res.json({ ...userData, token, allUsers });
+
+    res.json({ userData, token, allUsers });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -40,7 +40,11 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await UserModel.findOne({ email: email });
-
+    if (user.status === "notActive") {
+      return res.status(404).json({
+        message: "User is disabled!",
+      });
+    }
     if (!user) {
       return res.status(404).json({
         message: "Пользователь не найден",
@@ -64,8 +68,8 @@ export const login = async (req, res) => {
       }
     );
     const allUsers = await UserModel.find().exec();
-    // const { passwordHash, ...userData } = user._doc;
-    const userData = user._doc;
+    const { passwordHash, ...userData } = user._doc;
+    // const userData = user._doc;
     const updatedData = await UserModel.findOneAndUpdate(
       { _id: userData._id },
       { lastLogin: new Date() },
@@ -73,7 +77,8 @@ export const login = async (req, res) => {
     );
 
     res.json({
-      ...userData,
+      // userData,
+      updatedData,
       token,
       allUsers,
     });
@@ -107,10 +112,15 @@ export const me = async (req, res) => {
 export const block = async (req, res) => {
   const status = "notActive";
 
-  const users = req.body;
-  const userIDs = users.map((item) => {
-    return item._id;
-  });
+  // const users = req.body;
+  // console.log(users);
+  // const userIDs = users.map((item) => {
+  //   return item._id;
+  // });
+  // const userData = req.body;
+  const userIDs = req.body;
+  console.log(userIDs, "userIDs");
+  // console.log(userData, "userData");
 
   try {
     const updatedUsers = await UserModel.updateMany(
@@ -118,8 +128,11 @@ export const block = async (req, res) => {
       { $set: { status } }
     );
     const allUsers = await UserModel.find().exec();
+    // const updatedUser = await UserModel.findById(userData);
+    // console.log(updatedUser);
     res.status(200).json({
       allUsers,
+      // updatedUser,
       message: "Статус выбранных пользователей успешно обновлен",
     });
   } catch (error) {
@@ -131,10 +144,11 @@ export const block = async (req, res) => {
 export const unblock = async (req, res) => {
   const status = "active";
 
-  const users = req.body;
-  const userIDs = users.map((item) => {
-    return item._id;
-  });
+  // const users = req.body;
+  // const userIDs = users.map((item) => {
+  //   return item._id;
+  // });
+  const userIDs = req.body;
 
   try {
     const updatedUsers = await UserModel.updateMany(
@@ -144,21 +158,23 @@ export const unblock = async (req, res) => {
     const allUsers = await UserModel.find().exec();
 
     res.status(200).json({
+      updatedUsers,
       allUsers,
       message: "Статус выбранных пользователей успешно обновлен",
     });
   } catch (error) {
-    res.status(500).json(updatedUsers, {
+    res.status(500).json({
       error: "Ошибка при обновлении статуса пользователей",
     });
   }
 };
 export const remove = async (req, res) => {
-  const users = req.body;
-  console.log(users);
-  const userIDs = users.map((item) => {
-    return item._id;
-  });
+  // const users = req.body;
+  // console.log(users);
+  // const userIDs = users.map((item) => {
+  //   return item._id;
+  // });
+  const userIDs = req.body;
 
   try {
     const result = await UserModel.deleteMany({ _id: { $in: userIDs } });
