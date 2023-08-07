@@ -10,19 +10,17 @@ import {
 import checkAuth from "./utils/checkAuth.js";
 import {
   login,
-  me,
   register,
   block,
   unblock,
   remove,
 } from "./controllers/UserController.js";
 import handleValidationErrors from "./utils/handleValidationErrors.js";
-//
+
 const app = express();
 dotenv.config();
 app.use(express.json());
 app.use(cors());
-// consts
 const pass = process.env.PASSWORD;
 const port = process.env.PORT || 3001;
 // DB
@@ -44,22 +42,12 @@ app.post(
   handleValidationErrors,
   register
 );
-app.post(
-  "/auth/login",
-  loginValidation,
-  // handleValidationErrors,
-  login
-);
-app.get(
-  "/auth/me",
-  // checkAuth,
-  me
-);
+app.post("/auth/login", loginValidation, login);
+
 app.post("/auth/block", block);
 app.post("/auth/unblock", unblock);
 app.post("/auth/remove", remove);
 
-// запуск приложения
 app.listen(port, (error) => {
   if (error) console.log(error, "err");
   else {

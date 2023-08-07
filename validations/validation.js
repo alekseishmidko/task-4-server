@@ -5,9 +5,6 @@ export const loginValidation = [
   body("password", "password length should be more then 1 symbol").isLength({
     min: 1,
   }),
-  // body("fullName", "fullname length should be more then 2 synbols").isLength({
-  //   min: 2,
-  // }),
 ];
 export const registerValidation = [
   body("email", "Incorrect email!!!").isEmail(),

@@ -10,6 +10,8 @@ const UserSchema = new mongoose.Schema(
       default: "active",
     },
     key: { type: Number, unique: true },
+    dateOfCreate: { type: String },
+    dateOfLastLogin: { type: String },
   },
   { timestamps: true }
 );
